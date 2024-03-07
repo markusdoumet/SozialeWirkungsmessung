@@ -1,1 +1,1 @@
-# SozialeWirkungsmessung
+# Soziale Wirkungsmessung
