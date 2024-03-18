@@ -20,7 +20,7 @@ wasteSaved = 1560 * fractionLoadingSpace # metric tons
 waisteSavedEuro = 190.4 * wasteSaved #Euro
 numberOfGuests = 84638 # Visitors per year (not unique visitors, but visits per year))
 numberOfFoodPackages = 0.7 * numberOfGuests * fractionLoadingSpace
-averageVisitsPerYear = 1095 #Average visits per year per guest
+averageVisitsPerYear = 1096  #Average visits per year per guest
 proportionOfMaleGuests = (numberOfGuests / averageVisitsPerYear) * 0.49 * fractionLoadingSpace
 proportionOfFemaleGuests = (numberOfGuests / averageVisitsPerYear) * 0.51 * fractionLoadingSpace
 lifeExpectancyMale = 78.2
@@ -48,6 +48,7 @@ valueMeals = []
 valueFoodPackages = []
 healthCosts = []
 cashFlowCosts = []
+cashFlowBenefits = []
 cashFlowNetBenefits = []
 cashFlowHealthCostsSaved=[]
 PVHealthCostsSaved = []
@@ -120,6 +121,7 @@ def calculateCashFlows():
                 for costs in healthCosts:
                     cashFlowHealthCostsSaved.append(costs)
                     cashFlowCosts.append(rent + salaries  + fuelCost +maintenanceCost + insuranceCost + electricityCost)
+                    cashFlowBenefits.append(meals + foodPackages + waisteSavedEuro)
                     cashFlowNetBenefits.append(meals + foodPackages + waisteSavedEuro - (rent + salaries  + fuelCost +maintenanceCost + insuranceCost + electricityCost))    
                 
 def calculatePVs(): 
@@ -157,7 +159,12 @@ def calculatePVs():
             timeSeriesCosts = []            
             for i in range(1,6,1):
                 timeSeriesCosts.append(cashFlowCosts[idx])
-            PvCosts.append(npv(timeSeriesCosts, discountRate))
+            PvCosts.append(npv(timeSeriesCosts,discountRate))
+
+            timeSeriesBenefits = [] 
+            for i in range(1,6,1):               
+                timeSeriesBenefits.append(cashFlowBenefits[idx])
+            PvBenefits.append(npv(timeSeriesBenefits, discountRate) + PVHealthCostsSaved[-1])
             
             timeSeriesNetBenefits = []
            
@@ -189,7 +196,7 @@ def calculateSROIs():
 
 def calculateRobinHoodBenefitCostRatio():
    robinHoodBenefitCostRatios = []
-   for pv in PvNetBenefits:
+   for pv in PvBenefits:
        robinHoodBenefitCostRatios.append(benefitCostRatio(pv,initialInvestmentTotal,initialInvestmentSavingsBank))
    print("Robin Hood Benefit Cost Ratios:", len(robinHoodBenefitCostRatios))
    print("Robin Hood BCR MIN:", np.min(robinHoodBenefitCostRatios))
