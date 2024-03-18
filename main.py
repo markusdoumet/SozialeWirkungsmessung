@@ -1,0 +1,234 @@
+import numpy as np
+
+#Global constants
+fractionLoadingSpace = 22.71 / 176.68 #fraction of loading space in m³
+riskFreeRate = 0.0053
+marketRiskPremium = 0.048
+initialInvestmentTotal = 80000 #Euro
+initialInvestmentSavingsBank = 41129.58 #Euro
+buildingSize = 1674.24 * fractionLoadingSpace #m²
+salaries = 28050 * fractionLoadingSpace #Euro
+fuelCost = (240 * 50)/100 * 11.9 * 1.1 #Euro 240 tours, 50kM, 11.9L/100km, fuel price net 1.1 Euro/L
+maintenanceCost = (50000/1.19) * fractionLoadingSpace #Euro
+insuranceCost = (50000/1.19) * fractionLoadingSpace #Euro
+electricityCost = 38177.57 * fractionLoadingSpace #Euro
+mealsKantinePerYear = 82695
+mealsToGoPerYear = 75536
+mealsKindertafelPerYear = 3270
+mealsPerYear = (mealsKantinePerYear + mealsToGoPerYear + mealsKindertafelPerYear) * fractionLoadingSpace
+wasteSaved = 1560 * fractionLoadingSpace # metric tons
+waisteSavedEuro = 190.4 * wasteSaved #Euro
+numberOfGuests = 84638 # Visitors per year (not unique visitors, but visits per year))
+numberOfFoodPackages = 0.7 * numberOfGuests * fractionLoadingSpace
+averageVisitsPerYear = 1095 #Average visits per year per guest
+proportionOfMaleGuests = (numberOfGuests / averageVisitsPerYear) * 0.49 * fractionLoadingSpace
+proportionOfFemaleGuests = (numberOfGuests / averageVisitsPerYear) * 0.51 * fractionLoadingSpace
+lifeExpectancyMale = 78.2
+ageAverageMale = 43.4
+expectedRemainingLifetimeMale = lifeExpectancyMale - ageAverageMale
+lifeExpectancyFemale = 82.9
+
+ageAverageFemale = 46
+expectedRemainingLifetimeFemale =  lifeExpectancyFemale - ageAverageFemale
+numberOfGuestsKindertafel = 30
+ageAverageChildren = 11
+proportionOfMaleGuestsKinderTafel = numberOfGuestsKindertafel  * 0.49 * fractionLoadingSpace
+proportionOfFemaleGuestsKinderTafel = numberOfGuestsKindertafel * 0.51 * fractionLoadingSpace
+expectedRemainingLifetimeFemaleChildren = lifeExpectancyFemale - ageAverageChildren
+expectedRemainingLifetimeMaleChildren = lifeExpectancyMale - ageAverageChildren
+
+#wie viele essenportionen wo mit welchem Wert?
+#wie viele erwachsene kinder mit welchem Wert bei den Gesundheitskosten?
+
+
+#Global variables
+discountRates = []
+rentBuilding = []
+valueMeals = []
+valueFoodPackages = []
+healthCosts = []
+cashFlowCosts = []
+cashFlowNetBenefits = []
+cashFlowHealthCostsSaved=[]
+PVHealthCostsSaved = []
+PvCosts = []
+PvBenefits = []
+PvNetBenefits = []
+
+
+
+# This main function is the entry paint
+def main():
+    print('----Social Impact Measurement----')
+    print('---Feasible Values/Assumptions---')
+    print(f'The expected remaining life time for male children is {expectedRemainingLifetimeMaleChildren:.2f} years')
+    print(f'The expected remaining life time for female children is {expectedRemainingLifetimeFemaleChildren:.2f} years')
+    print(f'The expected remaining life time for male adults is {expectedRemainingLifetimeMale:.2f} years')
+    print(f'The expected remaining life time for female adults is {expectedRemainingLifetimeFemale:.2f} years')
+    setPossibleValues()
+    print('---------------------------------')
+    calculateCashFlows()
+    calculatePVs()
+    print('---------------------------------')
+    calculateSROIs()
+    print('---------------------------------')
+    calculateRobinHoodBenefitCostRatio()
+    print('---------------------------------')
+    
+
+#Calculate the cash flows
+def setPossibleValues():         
+    for beta in np.arange(0.4,1.7,0.1):
+        discountRates.append(capm(riskFreeRate, beta, marketRiskPremium))
+    for discountRate in discountRates:
+        print(f'The discount rate is: {discountRate*100:.2f}%')
+        
+ 
+    for rentPerSquareMeter in range(15,31,1):
+        rentBuilding.append(rentPerSquareMeter*buildingSize)
+    for rent in rentBuilding:
+        print(f'The rent for the building is: {rent:.2f} Euro')
+        
+    
+    for valueMeal in np.arange(2.0,3.1,1):
+        valueMeals.append(valueMeal*mealsPerYear)
+    for value in valueMeals:
+        print(f'The value of the meals is: {value:.2f} Euro')
+        
+    for valueFoodpackage in np.arange(9.0,20.0,1):
+        valueFoodPackages.append(valueFoodpackage*numberOfFoodPackages)
+    for value in valueFoodPackages:
+        print(f'The value of the food packages is: {value:.2f} Euro')
+    
+    print(f'The fuel costs are: {fuelCost:.2f} Euro')
+    print(f'The maintenance costs are: {maintenanceCost:.2f} Euro')
+    print(f'The insurance costs are: {insuranceCost:.2f} Euro')
+    print(f'The electricity costs are: {electricityCost:.2f} Euro')
+    print(f'The waste costs saved are: {wasteSaved:.2f} Euro')
+
+    for costs in range(16,33,1):
+        healthCosts.append(costs); 
+        print(f'The saved health costs are: {costs:.2f} Euro')
+
+      
+        
+                
+def calculateCashFlows():
+    for rent in rentBuilding:
+        for meals in valueMeals:
+            for foodPackages in valueFoodPackages:
+                for costs in healthCosts:
+                    cashFlowHealthCostsSaved.append(costs)
+                    cashFlowCosts.append(rent + salaries  + fuelCost +maintenanceCost + insuranceCost + electricityCost)
+                    cashFlowNetBenefits.append(meals + foodPackages + waisteSavedEuro - (rent + salaries  + fuelCost +maintenanceCost + insuranceCost + electricityCost))    
+                
+def calculatePVs(): 
+    
+    for discountRate in discountRates:   
+        print(f'Calculate all possible cashflows with a discount rate of {discountRate*100:.2f}%')    
+        idx = -1
+        for cashFlow in cashFlowHealthCostsSaved:
+            idx += 1 
+            #female children
+            timeSeriesFemaleChildren = []
+            for i in np.arange(1,expectedRemainingLifetimeFemaleChildren,1):
+                timeSeriesFemaleChildren.append(cashFlow * proportionOfFemaleGuestsKinderTafel)
+            
+            #male children
+            timeSeriesMaleChildren = []
+            for i in np.arange(1,expectedRemainingLifetimeMaleChildren,1):
+                timeSeriesMaleChildren.append(cashFlow * proportionOfMaleGuestsKinderTafel)
+            
+            #female adults  
+            timeSeriesFemale = []
+            for i in np.arange(1,expectedRemainingLifetimeFemale,1):
+                timeSeriesFemale.append(cashFlow * proportionOfFemaleGuests)
+            
+            #male adults
+            timeSeriesMale = []
+            for i in np.arange(1,expectedRemainingLifetimeMale,1):
+                timeSeriesMale.append(cashFlow * proportionOfMaleGuests)
+                             
+            PVHealthCostsSaved.append(npv(timeSeriesFemaleChildren, discountRate)
+                                 +npv(timeSeriesMaleChildren, discountRate)
+                                 +npv(timeSeriesFemale,discountRate)
+                                 +npv(timeSeriesMale,discountRate))
+        
+            timeSeriesCosts = []            
+            for i in range(1,6,1):
+                timeSeriesCosts.append(cashFlowCosts[idx])
+            PvCosts.append(npv(timeSeriesCosts, discountRate))
+            
+            timeSeriesNetBenefits = []
+           
+            for i in range(1,6,1):               
+                timeSeriesNetBenefits.append(cashFlowNetBenefits[idx])
+            PvNetBenefits.append(npv(timeSeriesNetBenefits, discountRate) + PVHealthCostsSaved[-1])
+    
+
+   
+           
+
+def calculateSROIs():   
+    srois = []
+    print(np.min(cashFlowNetBenefits))
+    print(np.max(cashFlowNetBenefits))
+    print(len(cashFlowNetBenefits))
+    print(np.min(PvNetBenefits))
+    print(np.max(PvNetBenefits))
+    print(len(PvNetBenefits))
+    for pv in PvNetBenefits:
+        srois.append(sroi(pv, initialInvestmentTotal))        
+    print("SROI Combinations:", len(srois))
+    print("SROI MIN:", np.min(srois))
+    print("SROI MAX:", np.max(srois))
+    print("SROI AVG:", np.average(srois))
+    print("SROI Median:", np.median(srois))
+    print("SROI Std Dev:", np.std(srois))
+    
+
+def calculateRobinHoodBenefitCostRatio():
+   robinHoodBenefitCostRatios = []
+   for pv in PvNetBenefits:
+       robinHoodBenefitCostRatios.append(benefitCostRatio(pv,initialInvestmentTotal,initialInvestmentSavingsBank))
+   print("Robin Hood Benefit Cost Ratios:", len(robinHoodBenefitCostRatios))
+   print("Robin Hood BCR MIN:", np.min(robinHoodBenefitCostRatios))
+   print("Robin Hood BCR MAX:", np.max(robinHoodBenefitCostRatios))
+   print("Robin Hood BCR AVG:", np.average(robinHoodBenefitCostRatios))
+   print("Robin Hood BCR Median:", np.median(robinHoodBenefitCostRatios))
+   print("Robin Hood BCR Std Dev:", np.std(robinHoodBenefitCostRatios))
+   
+        
+     
+       
+
+def npv(cashFlows, discountRate):
+    #Loop through the cash flows and discount them  
+    npv = 0
+    for i in range(len(cashFlows)):
+        npv += cashFlows[i] / (1 + discountRate) ** (i+1)   
+    return npv
+
+def capm(riskFreeRate, beta, marketRiskPremium):
+    #Calculate the expected return using the Capital Asset Pricing Model
+    return riskFreeRate + beta * marketRiskPremium
+
+def sroi(impacts, costs):
+    #Calculate the Social Return on Investment
+    return impacts / costs
+            
+def benefitCostRatio(impacts, initialInvestmentTotal, initialInvestmentSelf ):
+    #Calculate the Benefit-Cost Ratio
+    benefitCostRatio = impacts / initialInvestmentSelf
+    robinHoodBcRatio = (initialInvestmentSelf / initialInvestmentTotal)
+    robinHoodBenefits = robinHoodBcRatio * benefitCostRatio
+    return robinHoodBenefits
+
+    
+
+    
+
+# Check if this file is run as the main program
+if __name__ == "__main__":
+# Call the main function
+    main()
