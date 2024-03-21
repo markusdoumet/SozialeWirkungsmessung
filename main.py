@@ -1,9 +1,11 @@
+
 import numpy as np
 
 #Global constants
+#---here we set all fixed values according to the discussion in chapter 5---
 fractionLoadingSpace = 22.71 / 176.68 #fraction of loading space in m³
-riskFreeRate = 0.0053
-marketRiskPremium = 0.048
+riskFreeRate = 0.0053 #rate as decimal number
+marketRiskPremium = 0.048 #rate as decimal number
 initialInvestmentTotal = 80000 #Euro
 initialInvestmentSavingsBank = 41129.58 #Euro
 buildingSize = 1674.24 * fractionLoadingSpace #m²
@@ -12,36 +14,31 @@ fuelCost = (240 * 50)/100 * 11.9 * 1.1 #Euro 240 tours, 50kM, 11.9L/100km, fuel 
 maintenanceCost = (50000/1.19) * fractionLoadingSpace #Euro
 insuranceCost = (50000/1.19) * fractionLoadingSpace #Euro
 electricityCost = 38177.57 * fractionLoadingSpace #Euro
-mealsKantinePerYear = 82695
-mealsToGoPerYear = 75536
-mealsKindertafelPerYear = 3270
-mealsPerYear = (mealsKantinePerYear + mealsToGoPerYear + mealsKindertafelPerYear) * fractionLoadingSpace
+mealsKantinePerYear = 82695 #number of meals
+mealsToGoPerYear = 75536 #number of meals
+mealsKindertafelPerYear = 3270 #number of meals
+mealsPerYear = (mealsKantinePerYear + mealsToGoPerYear + mealsKindertafelPerYear) * fractionLoadingSpace #number of meals
 wasteSaved = 1560 * fractionLoadingSpace # metric tons
 waisteSavedEuro = 190.4 * wasteSaved #Euro
-numberOfGuests = 84638 # Visitors per year (not unique visitors, but visits per year))
-numberOfFoodPackages = 0.7 * numberOfGuests * fractionLoadingSpace
+numberOfGuests = 84638 # visits per year (not unique visitors, but visits per year))
+numberOfFoodPackages = 0.7 * numberOfGuests * fractionLoadingSpace #number of food packages in 
 averageVisitsPerYear = 1096  #Average visits per year per guest
-proportionOfMaleGuests = (numberOfGuests / averageVisitsPerYear) * 0.49 * fractionLoadingSpace
-proportionOfFemaleGuests = (numberOfGuests / averageVisitsPerYear) * 0.51 * fractionLoadingSpace
-lifeExpectancyMale = 78.2
-ageAverageMale = 43.4
-expectedRemainingLifetimeMale = lifeExpectancyMale - ageAverageMale
-lifeExpectancyFemale = 82.9
+proportionOfMaleGuests = (numberOfGuests / averageVisitsPerYear) * 0.49 * fractionLoadingSpace   #persons / unique vistors
+proportionOfFemaleGuests = (numberOfGuests / averageVisitsPerYear) * 0.51 * fractionLoadingSpace #persons / unique vistors
+lifeExpectancyMale = 78.2 #years
+ageAverageMale = 43.4 #years
+expectedRemainingLifetimeMale = lifeExpectancyMale - ageAverageMale #years
+lifeExpectancyFemale = 82.9 #years
+ageAverageFemale = 46.0 #years
+expectedRemainingLifetimeFemale =  lifeExpectancyFemale - ageAverageFemale #years
+numberOfGuestsKindertafel = 30 #persons
+ageAverageChildren = 11 #years
+proportionOfMaleGuestsKinderTafel = numberOfGuestsKindertafel  * 0.49 * fractionLoadingSpace #persons
+proportionOfFemaleGuestsKinderTafel = numberOfGuestsKindertafel * 0.51 * fractionLoadingSpace #persons
+expectedRemainingLifetimeFemaleChildren = lifeExpectancyFemale - ageAverageChildren #year
+expectedRemainingLifetimeMaleChildren = lifeExpectancyMale - ageAverageChildren #years
 
-ageAverageFemale = 46
-expectedRemainingLifetimeFemale =  lifeExpectancyFemale - ageAverageFemale
-numberOfGuestsKindertafel = 30
-ageAverageChildren = 11
-proportionOfMaleGuestsKinderTafel = numberOfGuestsKindertafel  * 0.49 * fractionLoadingSpace
-proportionOfFemaleGuestsKinderTafel = numberOfGuestsKindertafel * 0.51 * fractionLoadingSpace
-expectedRemainingLifetimeFemaleChildren = lifeExpectancyFemale - ageAverageChildren
-expectedRemainingLifetimeMaleChildren = lifeExpectancyMale - ageAverageChildren
-
-#wie viele essenportionen wo mit welchem Wert?
-#wie viele erwachsene kinder mit welchem Wert bei den Gesundheitskosten?
-
-
-#Global variables
+#Global variables & lists
 discountRates = []
 rentBuilding = []
 valueMeals = []
@@ -51,14 +48,14 @@ cashFlowCosts = []
 cashFlowBenefits = []
 cashFlowNetBenefits = []
 cashFlowHealthCostsSaved=[]
+cashFlowsMealsAlternative=[]
 PVHealthCostsSaved = []
 PvCosts = []
 PvBenefits = []
 PvNetBenefits = []
+PvMealsAlternative =[]
 
-
-
-# This main function is the entry paint
+# This main function is the entry point
 def main():
     print('----Social Impact Measurement----')
     print('---Feasible Values/Assumptions---')
@@ -75,9 +72,10 @@ def main():
     print('---------------------------------')
     calculateRobinHoodBenefitCostRatio()
     print('---------------------------------')
-    
+    calculateBacoRatios()
+    print('---------------------------------')
 
-#Calculate the cash flows
+#Here we set the permissible values for all variables that cannot be determined exactly and should instead be considered in ranges.
 def setPossibleValues():         
     for beta in np.arange(0.4,1.7,0.1):
         discountRates.append(capm(riskFreeRate, beta, marketRiskPremium))
@@ -110,10 +108,8 @@ def setPossibleValues():
     for costs in range(16,33,1):
         healthCosts.append(costs); 
         print(f'The saved health costs are: {costs:.2f} Euro')
-
-      
-        
-                
+       
+#Here we calculate the surplus of all costs and monetized impacts          
 def calculateCashFlows():
     for rent in rentBuilding:
         for meals in valueMeals:
@@ -123,9 +119,10 @@ def calculateCashFlows():
                     cashFlowCosts.append(rent + salaries  + fuelCost +maintenanceCost + insuranceCost + electricityCost)
                     cashFlowBenefits.append(meals + foodPackages + waisteSavedEuro)
                     cashFlowNetBenefits.append(meals + foodPackages + waisteSavedEuro - (rent + salaries  + fuelCost +maintenanceCost + insuranceCost + electricityCost))    
+                    cashFlowsMealsAlternative.append(meals/fractionLoadingSpace)
                 
-def calculatePVs(): 
-    
+#Here we calcualte present values
+def calculatePVs():   
     for discountRate in discountRates:   
         print(f'Calculate all possible cashflows with a discount rate of {discountRate*100:.2f}%')    
         idx = -1
@@ -171,11 +168,9 @@ def calculatePVs():
             for i in range(1,6,1):               
                 timeSeriesNetBenefits.append(cashFlowNetBenefits[idx])
             PvNetBenefits.append(npv(timeSeriesNetBenefits, discountRate) + PVHealthCostsSaved[-1])
-    
-
-   
-           
-
+            
+            PvMealsAlternative.append(cashFlowsMealsAlternative[idx])  
+                 
 def calculateSROIs():   
     srois = []
     print(np.min(cashFlowNetBenefits))
@@ -193,27 +188,35 @@ def calculateSROIs():
     print("SROI Median:", np.median(srois))
     print("SROI Std Dev:", np.std(srois))
     
-
 def calculateRobinHoodBenefitCostRatio():
    robinHoodBenefitCostRatios = []
    for pv in PvBenefits:
        robinHoodBenefitCostRatios.append(benefitCostRatio(pv,initialInvestmentTotal,initialInvestmentSavingsBank))
-   print("Robin Hood Benefit Cost Ratios:", len(robinHoodBenefitCostRatios))
+   print("Robin Hood BCR Combinations:", len(robinHoodBenefitCostRatios))
    print("Robin Hood BCR MIN:", np.min(robinHoodBenefitCostRatios))
    print("Robin Hood BCR MAX:", np.max(robinHoodBenefitCostRatios))
    print("Robin Hood BCR AVG:", np.average(robinHoodBenefitCostRatios))
    print("Robin Hood BCR Median:", np.median(robinHoodBenefitCostRatios))
    print("Robin Hood BCR Std Dev:", np.std(robinHoodBenefitCostRatios))
    
-        
-     
-       
-
+def calculateBacoRatios():
+   BacoRatios = []
+   idx = -1
+   for pv in PvBenefits:
+       idx += 1
+       BacoRatios.append(baco(pv,initialInvestmentTotal, PvMealsAlternative[idx]))
+   print("Baco Combinations:", len(BacoRatios))
+   print("Baco MIN:", np.min(BacoRatios))
+   print("Baco MAX:", np.max(BacoRatios))
+   print("Baco AVG:", np.average(BacoRatios))
+   print("Baco Median:", np.median(BacoRatios))
+   print("Baco Std Dev:", np.std(BacoRatios))       
+            
 def npv(cashFlows, discountRate):
     #Loop through the cash flows and discount them  
     npv = 0
     for i in range(len(cashFlows)):
-        npv += cashFlows[i] / (1 + discountRate) ** (i+1)   
+        npv += cashFlows[i] / (1 + discountRate) ** (i+1)    #i+1 because i starts at zero but first payment is in t=1
     return npv
 
 def capm(riskFreeRate, beta, marketRiskPremium):
@@ -231,10 +234,13 @@ def benefitCostRatio(impacts, initialInvestmentTotal, initialInvestmentSelf ):
     robinHoodBenefits = robinHoodBcRatio * benefitCostRatio
     return robinHoodBenefits
 
-    
-
-    
-
+def baco(impacts, initialInvestmentTotal, mealsAlternative):
+     #Calculate the Best Available Charitable Option
+    socialImpactProject = impacts
+    socialImpactComparison = (initialInvestmentTotal / 300000) * mealsAlternative
+    baco = (initialInvestmentTotal / socialImpactComparison) / (initialInvestmentTotal / socialImpactProject)
+    return baco   
+      
 # Check if this file is run as the main program
 if __name__ == "__main__":
 # Call the main function
