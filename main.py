@@ -3,17 +3,17 @@ import numpy as np
 
 #Global constants
 #---here we set all fixed values according to the discussion in chapter 5---
-fractionLoadingSpace = 22.71 / 176.68 #fraction of loading space in m³
+fractionLoadingSpace = 22.71 / 176.86 #fraction of loading space in m³
 riskFreeRate = 0.0053 #rate as decimal number
 marketRiskPremium = 0.048 #rate as decimal number
 initialInvestmentTotal = 80000 #Euro
 initialInvestmentSavingsBank = 41129.58 #Euro
-buildingSize = 1674.24 * fractionLoadingSpace #m²
+buildingSize = 1674.25 * fractionLoadingSpace #m²
 salaries = 28050 * fractionLoadingSpace #Euro
 fuelCost = (240 * 50)/100 * 11.9 * 1.1 #Euro 240 tours, 50kM, 11.9L/100km, fuel price net 1.1 Euro/L
 maintenanceCost = (50000/1.19) * fractionLoadingSpace #Euro
 insuranceCost = (50000/1.19) * fractionLoadingSpace #Euro
-electricityCost = 38177.57 * fractionLoadingSpace #Euro
+electricityCost = 30455.64 * fractionLoadingSpace #Euro
 mealsKantinePerYear = 82695 #number of meals
 mealsToGoPerYear = 75536 #number of meals
 mealsKindertafelPerYear = 3270 #number of meals
@@ -22,7 +22,7 @@ wasteSaved = 1560 * fractionLoadingSpace # metric tons
 waisteSavedEuro = 190.4 * wasteSaved #Euro
 numberOfGuests = 84638 # visits per year (not unique visitors, but visits per year))
 numberOfFoodPackages = 0.7 * numberOfGuests * fractionLoadingSpace #number of food packages in 
-averageVisitsPerYear = 1096  #Average visits per year per guest
+averageVisitsPerYear = 1095  #Average visits per year per guest
 proportionOfMaleGuests = (numberOfGuests / averageVisitsPerYear) * 0.49 * fractionLoadingSpace   #persons / unique vistors
 proportionOfFemaleGuests = (numberOfGuests / averageVisitsPerYear) * 0.51 * fractionLoadingSpace #persons / unique vistors
 lifeExpectancyMale = 78.2 #years
