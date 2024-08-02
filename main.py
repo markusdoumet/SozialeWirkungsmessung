@@ -4,7 +4,7 @@ import numpy as np
 #Global constants
 #---here we set all fixed values according to the discussion in chapter 5---
 fractionLoadingSpace = 22.71 / 176.86 #fraction of loading space in m³
-riskFreeRate = 0.0053 #rate as decimal number
+riskFreeRate = 0.0167 #rate as decimal number
 marketRiskPremium = 0.048 #rate as decimal number
 initialInvestmentTotal = 80000 #Euro
 initialInvestmentSavingsBank = 41129.58 #Euro
